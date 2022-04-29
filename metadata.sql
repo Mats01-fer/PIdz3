@@ -77,14 +77,14 @@ INSERT INTO tablica (nazTablica, nazSQLTablica, sifTipTablica)
 SELECT name, name, 1
   FROM sysobjects
  WHERE xtype = 'u'
-   AND name LIKE 'c%' -- za AdventureWorks staviti LIKE 'Fact%'
+   AND name LIKE 'fact%' -- za AdventureWorks staviti LIKE 'fact%'
 
 
 INSERT INTO tablica (nazTablica, nazSQLTablica, sifTipTablica) 
 SELECT name, name, 2
   FROM sysobjects
  WHERE xtype = 'u'
-   AND name LIKE 'd%' -- za AdventureWorks staviti LIKE 'Dim%'
+   AND name LIKE 'dim%' -- za AdventureWorks staviti LIKE 'dim%'
    AND name <> 'dimCinj' 
 
 -- Prepisuje podatke o SVIM atributima u naše tablice
@@ -101,7 +101,7 @@ SELECT (SELECT sifTablica FROM tablica WHERE nazSQLTablica =  t.name)
   FROM sysobjects t, syscolumns c
   WHERE t.id = c.id
     AND t.xtype = 'u'
-    AND t.name LIKE 'd%' -- za AdventureWorks staviti LIKE 'Dim%'
+    AND t.name LIKE 'dim%' -- za AdventureWorks staviti LIKE 'dim%'
     AND t.name <> 'dimCinj'
   ORDER BY 1, 2
   
@@ -113,21 +113,21 @@ SELECT (SELECT sifTablica FROM tablica WHERE nazSQLTablica =  t.name)
 --upiti će ispravno napuniti tabAtribut tablicu ako ste se pri imenovanju atributa držali neke konvencije 
 --npr. ključevi dimenzija i strani ključevi činjeničnih tablica sadrže neki uzorak ('%sif%' ili '%ID%' ili '%key%',...)
    
---INSERT INTO tabAtribut
---  
---SELECT (SELECT sifTablica FROM tablica WHERE nazSQLTablica =  t.name)
---     , c.colid
---     , c.name
---     , 1
---     , c.name
---     
---  FROM sysobjects t, syscolumns c
--- WHERE t.id = c.id
---   AND t.xtype = 'u'
---   AND t.name LIKE 'c%'   -- za AdventureWorks staviti LIKE 'Fact%'
---   AND t.name <> 'dimCinj'
---   AND NOT (c.name LIKE 'sif%') -- za AdventureWorks staviti LIKE '%Key'
--- ORDER BY 1, 2
+INSERT INTO tabAtribut
+  
+SELECT (SELECT sifTablica FROM tablica WHERE nazSQLTablica =  t.name)
+     , c.colid
+     , c.name
+     , 1
+     , c.name
+     
+  FROM sysobjects t, syscolumns c
+ WHERE t.id = c.id
+   AND t.xtype = 'u'
+   AND t.name LIKE 'c%'   -- za AdventureWorks staviti LIKE 'fact%'
+   AND t.name <> 'dimCinj'
+   AND NOT (c.name LIKE 'key%') -- za AdventureWorks staviti LIKE '%key'
+ ORDER BY 1, 2
 
 INSERT INTO tabAtribut  
 
@@ -140,9 +140,9 @@ SELECT (SELECT sifTablica FROM tablica WHERE nazSQLTablica =  t.name)
   FROM sysobjects t, syscolumns c
  WHERE t.id = c.id
    AND t.xtype = 'u'
-   AND t.name LIKE 'c%'   -- za AdventureWorks staviti LIKE 'Fact%'
+   AND t.name LIKE 'fact%'   -- za AdventureWorks staviti LIKE 'fact%'
    AND t.name <> 'dimCinj'
-   AND c.name NOT LIKE '%ID%' -- za AdventureWorks staviti NOT LIKE '%Key'
+   AND c.name NOT LIKE '%key' -- za AdventureWorks staviti NOT LIKE '%key'
 
 UNION 
 
@@ -155,9 +155,9 @@ SELECT (SELECT sifTablica FROM tablica WHERE nazSQLTablica =  t.name)
   FROM sysobjects t, syscolumns c
  WHERE t.id = c.id
    AND t.xtype = 'u'
-   AND t.name LIKE 'c%'   -- za AdventureWorks staviti LIKE 'Fact%'
+   AND t.name LIKE 'fact%'   -- za AdventureWorks staviti LIKE 'fact%'
    AND t.name <> 'dimCinj'
-   AND c.name LIKE '%ID%' -- za AdventureWorks staviti LIKE '%Key'
+   AND c.name LIKE '%key' -- za AdventureWorks staviti LIKE '%key'
 
  ORDER BY 1, 2
 
@@ -185,7 +185,7 @@ INSERT INTO dimCinj
    AND t1.id = c1.id
    AND fk.rkey   = c2.colid
    AND t2.id = c2.id
-   AND t1.name LIKE 'c%' -- za AdventureWorks staviti LIKE 'Fact%'
+   AND t1.name LIKE 'fact%' -- za AdventureWorks staviti LIKE 'fact%'
 
  ORDER BY 1, 2
  
@@ -233,8 +233,8 @@ SELECT *
 -- vraća mjere:  
 SELECT * 
   FROM tabAtribut, agrFun, tablica, tabAtributAgrFun                                          
- WHERE tabAtribut.sifTablica =  100 -- Zamijeniti s npr. <<this.RadioButtonListFacts.SelectedItem.Value>>
-   AND tabAtribut.sifTablica = tablica.sifTablica 
+  WHERE tabAtribut.sifTablica = tablica.sifTablica 
+--  AND tabAtribut.sifTablica =  100 -- Zamijeniti s npr. <<this.RadioButtonListFacts.SelectedItem.Value>>
    AND tabAtribut.sifTablica  = tabAtributAgrFun.sifTablica 
    AND tabAtribut.rbrAtrib  = tabAtributAgrFun.rbrAtrib 
    AND tabAtributAgrFun.sifAgrFun = agrFun.sifAgrFun 
@@ -264,7 +264,7 @@ SELECT   dimTablica.nazTablica
    AND dimCinj.rbrDim = dimTabAtribut.rbrAtrib
 
    AND tabAtribut.sifTablica  = dimCinj.sifDimTablica
-   AND sifCinjTablica = 100 --  Zamijeniti 
+  -- AND sifCinjTablica = 100 --  Zamijeniti 
    AND tabAtribut.sifTipAtrib = 2
  ORDER BY dimTablica.nazTablica, rbrAtrib
  
@@ -272,10 +272,10 @@ SELECT   dimTablica.nazTablica
  
 
   --- DROP TABLES:
--- DROP  TABLE tabAtributAgrFun 
--- DROP  TABLE dimCinj 
--- DROP  TABLE tabAtribut 
--- DROP  TABLE tipAtrib 
--- DROP  TABLE tablica 
--- DROP  TABLE tipTablica 
--- DROP  TABLE agrFun 
+ DROP  TABLE tabAtributAgrFun 
+ DROP  TABLE dimCinj 
+ DROP  TABLE tabAtribut 
+ DROP  TABLE tipAtrib 
+ DROP  TABLE tablica 
+ DROP  TABLE tipTablica 
+ DROP  TABLE agrFun 
