@@ -67,8 +67,8 @@ def get_cinjenicne_tablice():
   
 
 def run_query():
-    global option
-    code = "SELECT TOP %d  * FROM %s " % (20, option) 
+    global option, limit, use_limit
+    code = "SELECT TOP %d  * FROM %s " % (limit, option) if use_limit else "SELECT * FROM %s " % option
     execute_req(code)
   
 def execute_req(naredba):    
@@ -136,6 +136,10 @@ with st.sidebar.expander("Dimenzije"):
                 
 
 
+
+
+use_limit = st.sidebar.checkbox("use limit")
+limit = st.sidebar.slider('limit', 0, 100, 10)
 
 
 st.sidebar.button('Pokreni', on_click=run_query)
