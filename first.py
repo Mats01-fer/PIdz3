@@ -88,8 +88,23 @@ title = st.sidebar.text_input("connection string", value=SQL_SERVER_CONNECTION_S
 option = st.sidebar.selectbox("odaberite cinjenicnu tablicu", options=[opt for opt in cinenjicne_tablice])
 
 
-st.sidebar.write(title)
 
+mjere = {'mjera1': False, 'mjera2': False}
+with st.sidebar.expander("Mjere"):
+    for k in mjere.keys():
+        mjere[k] = st.checkbox(k)
+        
+dimenzije = {'dimenzija1': {'attr1': False, 'attr2': False}, 'dimenzija2': {'2attr1': False, '2 attr2': False}}
+with st.sidebar.expander("Dimenzije"):
+    for k in dimenzije.keys():
+        st.write(k)
+        try:
+            for k2 in dimenzije[k].keys():
+                dimenzije[k][k2] = st.checkbox(k + " " + k2)
+        except:
+            st.write("vise atributa ima isto ime")
+                
+             
 st.subheader('Recimo tablica')
 st.write(data)
 
