@@ -1,3 +1,5 @@
+from cProfile import run
+from tokenize import group
 from certifi import where
 import streamlit as st
 import pandas as pd
@@ -123,27 +125,42 @@ def run_query():
     limit_select = "SELECT TOP %d" % (limit) if use_limit else "SELECT"
     from_statement = "\nFROM %s" % (option)
     select = ""
-    where_statement = ""
+    where = ""
+    group_by = ""
+    
     if option in tablice and 'mjere' in tablice[option]:
         for mjera in tablice[option]['mjere']:
             print(tablice[option]['mjere'][mjera])
             if tablice[option]['mjere'][mjera]['active']:
                 select += '\n%s  as "%s",' % (tablice[option]['mjere'][mjera]['naredba'] , mjera)
             
-        select = select[:-1]
     
-    if select == "":
-        select = "\n*"
     
     if option in tablice and 'dimenzije' in tablice[option]:
         for dim in tablice[option]['dimenzije']:
             from_statement += "\n, %s" % (dim)
             for attr in tablice[option]['dimenzije'][dim]:
-                if where_statement == "":
-                    where_statement = "\nWHERE %s.%s = %s.%s" % (option, attr, dim, attr)
-                else: 
-                    where_statement += "\nAND %s.%s = %s.%s" % (option, attr, dim, attr)
-    code = """%s %s %s %s""" % (limit_select, select, from_statement, where_statement)
+                if tablice[option]['dimenzije'][dim][attr]:
+                    if where == "":
+                        where = "\nWHERE %s.%s = %s.%s" % (option, attr, dim, attr)
+                    else: 
+                        where += "\nAND %s.%s = %s.%s" % (option, attr, dim, attr)
+                    select += '\n%s.%s as "%s_%s",' % (dim, attr, dim, attr)
+                    group_by += '\n%s.%s,' % (dim, attr)
+    
+    if(group_by):
+        group_by = group_by[:-1]
+        group_by = "\nGROUP BY %s" % (group_by)
+
+
+    
+    if select == "":
+        select = "\n*"
+    
+    if select[-1] == ",":
+        select = select[:-1]
+
+    code = """%s %s %s %s %s""" % (limit_select, select, from_statement, where, group_by)
   
     
     results, columns = execute_query(code, connection_string)
@@ -182,18 +199,18 @@ if submitted:
 option = st.sidebar.selectbox("odaberite cinjenicnu tablicu", options=[opt.strip() for opt in cinjenicne_tablice])
 
 
-form = st.form(key="forma")
+form = st.sidebar.form(key="forma")
 
 with form:
 
-    with st.sidebar.expander("Mjere"):
+    with st.expander("Mjere"):
         if option in tablice and 'mjere' in tablice[option]:
             for mjera in tablice[option]['mjere']:
                 tablice[option]['mjere'][mjera]['active'] = st.checkbox(mjera)
 
             
 
-    with st.sidebar.expander("Dimenzije"):
+    with st.expander("Dimenzije"):
         if option in tablice and 'dimenzije' in tablice[option]:
             for k in tablice[option]['dimenzije'].keys():
                 st.write(k)
@@ -207,10 +224,11 @@ with form:
 
 
 
-    use_limit = st.sidebar.checkbox("use limit", value=True)
-    limit = st.sidebar.slider('limit', 0, 100, 10)
+    use_limit = st.checkbox("use limit", value=True)
+    limit = st.slider('limit', 0, 100, 10)
 
 
-    st.sidebar.button('Pokreni', on_click=run_query)
-
-
+    query_ready = st.form_submit_button(label="Pokreni")
+    
+if query_ready:
+    run_query()
