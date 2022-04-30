@@ -23,6 +23,6 @@ def execute_query(naredba, connection_string):
         # conn.commit()
         conn.close()
     except Exception as e:
-      pass
+      print(e)
     
     return results, columns

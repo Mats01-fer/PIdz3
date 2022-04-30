@@ -58,7 +58,7 @@ def get_cinjenicne_tablice():
     for tablica in cinjenicne_tablice:
         curr_id = cinjenicne_tablice_id[cinjenicne_tablice.index(tablica)]
     
-        naredba = """SELECT * 
+        naredba = """SELECT  nazAgrFun, imeSQLAtrib, tabAtributAgrFun.imeAtrib 
             FROM tabAtribut, agrFun, tablica, tabAtributAgrFun                                          
             WHERE tabAtribut.sifTablica = tablica.sifTablica 
             AND tabAtribut.sifTablica =  %s 
@@ -71,7 +71,7 @@ def get_cinjenicne_tablice():
         (results, _) = execute_query(naredba, connection_string)
         
         for i in results:
-            tablice[tablica]['mjere']["%s of %s" % (i[6].strip(), i[4].strip())] = False
+            tablice[tablica]['mjere'][i[2].strip()] = {'active': False, 'naredba': "%s(%s)" % (i[0].strip(), i[1].strip())}
             
             
     # 3. za svaku tablicu dohvati popis dimenzija
@@ -118,7 +118,21 @@ def get_cinjenicne_tablice():
 
 def run_query():
     global option, limit, use_limit, code_block, data
-    code = "SELECT TOP %d  * FROM %s " % (limit, option) if use_limit else "SELECT * FROM %s " % option
+    
+    limit_select = "SELECT TOP %d" % (limit) if use_limit else "SELECT"
+    from_statement = "\nFROM %s" % (option)
+    select_mjere = ""
+    if option in tablice and 'mjere' in tablice[option]:
+        for mjera in tablice[option]['mjere']:
+            print(tablice[option]['mjere'][mjera])
+            if tablice[option]['mjere'][mjera]['active']:
+                select_mjere += '\n%s  as "%s",' % (tablice[option]['mjere'][mjera]['naredba'] , mjera)
+            
+        select_mjere = select_mjere[:-1]
+    
+    code = """%s %s %s""" % (limit_select, select_mjere, from_statement)
+  
+    
     results, columns = execute_query(code, connection_string)
     data = pd.DataFrame(results, columns=columns)
     code_block = st.code(code, language='sql')
@@ -162,7 +176,7 @@ with form:
     with st.sidebar.expander("Mjere"):
         if option in tablice and 'mjere' in tablice[option]:
             for mjera in tablice[option]['mjere']:
-                tablice[option]['mjere'][mjera] = st.checkbox(mjera)
+                tablice[option]['mjere'][mjera]['active'] = st.checkbox(mjera)
 
             
 
