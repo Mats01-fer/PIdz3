@@ -1,17 +1,7 @@
-from pprint import pprint
-import time
-from unittest import result
-from soupsieve import select
 import streamlit as st
 import pandas as pd
-import numpy as np
-import pymssql
-import re
-import streamlit.components.v1 as components
 
 from sql_utils import execute_query
-
-
 
 
 server = "localhost"
@@ -22,10 +12,21 @@ SQL_SERVER_CONNECTION_STRING = 'Server=%s;Database=%s;User Id=%s;Password=%s;' %
 
 
 
-DATE_COLUMN = 'date/time'
-DATA_URL = ('https://s3-us-west-2.amazonaws.com/'
-         'streamlit-demo-data/uber-raw-data-sep14.csv.gz')
 
+st.markdown(
+    """
+    <style>
+    [data-testid="stSidebar"][aria-expanded="true"] > div:first-child {
+        width: 500px;
+    }
+    [data-testid="stSidebar"][aria-expanded="false"] > div:first-child {
+        width: 500px;
+        margin-left: -500px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 cinjenicne_tablice = []
@@ -34,7 +35,7 @@ option = ""
 title = SQL_SERVER_CONNECTION_STRING
 
 tablice = {}
-mjere = {'test': False}
+
 
 
 
@@ -178,17 +179,3 @@ with form:
     st.sidebar.button('Pokreni', on_click=run_query)
 
 
-st.markdown(
-    """
-    <style>
-    [data-testid="stSidebar"][aria-expanded="true"] > div:first-child {
-        width: 500px;
-    }
-    [data-testid="stSidebar"][aria-expanded="false"] > div:first-child {
-        width: 500px;
-        margin-left: -500px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
