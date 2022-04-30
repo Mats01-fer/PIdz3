@@ -32,7 +32,7 @@ st.markdown(
 cinjenicne_tablice = []
 cinjenicne_tablice_id = []
 option = ""
-title = SQL_SERVER_CONNECTION_STRING
+connection_string = SQL_SERVER_CONNECTION_STRING
 
 tablice = {}
 
@@ -41,12 +41,12 @@ tablice = {}
 
 # @st.cache
 def get_cinjenicne_tablice():    
-    global title, cinjenicne_tablice, cinjenicne_tablice_id
+    global connection_string, cinjenicne_tablice, cinjenicne_tablice_id
 
 
     # 1. Dohvati popis cinjenicnih tablica
     naredba = """SELECT *  FROM tablica WHERE sifTipTablica = 1 """
-    (results, _) = execute_query(naredba, title)    
+    (results, _) = execute_query(naredba, connection_string)    
 
     cinjenicne_tablice = [i[2].strip() for i in results]
     cinjenicne_tablice_id = [i[0] for i in results]
@@ -68,7 +68,7 @@ def get_cinjenicne_tablice():
             AND tabAtribut.sifTipAtrib = 1
             ORDER BY tabAtribut.rbrAtrib""" % curr_id
         
-        (results, _) = execute_query(naredba, title)
+        (results, _) = execute_query(naredba, connection_string)
         
         for i in results:
             tablice[tablica]['mjere']["%s of %s" % (i[6].strip(), i[4].strip())] = False
@@ -103,7 +103,7 @@ def get_cinjenicne_tablice():
                 ORDER BY dimTablica.nazTablica, rbrAtrib
                 """ % curr_id
                 
-        (results, _) = execute_query(naredba, title)
+        (results, _) = execute_query(naredba, connection_string)
         for result in results:
             dim = result[0].strip()
             attr = result[1].strip()
@@ -119,7 +119,7 @@ def get_cinjenicne_tablice():
 def run_query():
     global option, limit, use_limit, code_block, data
     code = "SELECT TOP %d  * FROM %s " % (limit, option) if use_limit else "SELECT * FROM %s " % option
-    results, columns = execute_query(code, title)
+    results, columns = execute_query(code, connection_string)
     data = pd.DataFrame(results, columns=columns)
     code_block = st.code(code, language='sql')
     st.subheader('Recimo tablica')
@@ -140,8 +140,14 @@ data_load_state = st.text('')
 
 get_cinjenicne_tablice()
 
+conn_string_from = st.sidebar.form(key="conn_string_from")
 
-title = st.sidebar.text_input("connection string", value=SQL_SERVER_CONNECTION_STRING, max_chars=None, key=None, type="default", help=None, autocomplete=None, on_change=get_cinjenicne_tablice, args=None, kwargs=None,  placeholder=None, disabled=False)   
+with conn_string_from:
+    connection_string = st.text_input("connection string", value=SQL_SERVER_CONNECTION_STRING, max_chars=None, key=None, type="default", help=None, autocomplete=None, args=None, kwargs=None,  placeholder=None, disabled=False)   
+    submitted = st.form_submit_button(label="Osvjezi")
+    
+if submitted:
+    get_cinjenicne_tablice()
 
 
 
@@ -154,19 +160,21 @@ form = st.form(key="forma")
 with form:
 
     with st.sidebar.expander("Mjere"):
-        for mjera in tablice[option]['mjere']:
-            tablice[option]['mjere'][mjera] = st.checkbox(mjera)
+        if option in tablice and 'mjere' in tablice[option]:
+            for mjera in tablice[option]['mjere']:
+                tablice[option]['mjere'][mjera] = st.checkbox(mjera)
 
             
 
     with st.sidebar.expander("Dimenzije"):
-        for k in tablice[option]['dimenzije'].keys():
-            st.write(k)
-            try:
-                for k2 in tablice[option]['dimenzije'][k].keys():
-                    tablice[option]['dimenzije'][k][k2] = st.checkbox(k + " " + k2)
-            except:
-                st.write("vise atributa ima isto ime")
+        if option in tablice and 'dimenzije' in tablice[option]:
+            for k in tablice[option]['dimenzije'].keys():
+                st.write(k)
+                try:
+                    for k2 in tablice[option]['dimenzije'][k].keys():
+                        tablice[option]['dimenzije'][k][k2] = st.checkbox(k + " " + k2)
+                except:
+                    st.write("vise atributa ima isto ime")
                     
 
 
