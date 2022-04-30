@@ -1,3 +1,4 @@
+from certifi import where
 import streamlit as st
 import pandas as pd
 
@@ -121,16 +122,28 @@ def run_query():
     
     limit_select = "SELECT TOP %d" % (limit) if use_limit else "SELECT"
     from_statement = "\nFROM %s" % (option)
-    select_mjere = ""
+    select = ""
+    where_statement = ""
     if option in tablice and 'mjere' in tablice[option]:
         for mjera in tablice[option]['mjere']:
             print(tablice[option]['mjere'][mjera])
             if tablice[option]['mjere'][mjera]['active']:
-                select_mjere += '\n%s  as "%s",' % (tablice[option]['mjere'][mjera]['naredba'] , mjera)
+                select += '\n%s  as "%s",' % (tablice[option]['mjere'][mjera]['naredba'] , mjera)
             
-        select_mjere = select_mjere[:-1]
+        select = select[:-1]
     
-    code = """%s %s %s""" % (limit_select, select_mjere, from_statement)
+    if select == "":
+        select = "\n*"
+    
+    if option in tablice and 'dimenzije' in tablice[option]:
+        for dim in tablice[option]['dimenzije']:
+            from_statement += "\n, %s" % (dim)
+            for attr in tablice[option]['dimenzije'][dim]:
+                if where_statement == "":
+                    where_statement = "\nWHERE %s.%s = %s.%s" % (option, attr, dim, attr)
+                else: 
+                    where_statement += "\nAND %s.%s = %s.%s" % (option, attr, dim, attr)
+    code = """%s %s %s %s""" % (limit_select, select, from_statement, where_statement)
   
     
     results, columns = execute_query(code, connection_string)
@@ -186,7 +199,7 @@ with form:
                 st.write(k)
                 try:
                     for k2 in tablice[option]['dimenzije'][k].keys():
-                        tablice[option]['dimenzije'][k][k2] = st.checkbox(k + " " + k2)
+                        tablice[option]['dimenzije'][k][k2] = st.checkbox(k2)
                 except:
                     st.write("vise atributa ima isto ime")
                     
