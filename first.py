@@ -138,15 +138,20 @@ def run_query():
     
     if option in tablice and 'dimenzije' in tablice[option]:
         for dim in tablice[option]['dimenzije']:
-            from_statement += "\n, %s" % (dim)
+            present = False
             for attr in tablice[option]['dimenzije'][dim]:
                 if tablice[option]['dimenzije'][dim][attr]:
+                    present = True
                     if where == "":
                         where = "\nWHERE %s.%s = %s.%s" % (option, attr, dim, attr)
                     else: 
                         where += "\nAND %s.%s = %s.%s" % (option, attr, dim, attr)
                     select += '\n%s.%s as "%s_%s",' % (dim, attr, dim, attr)
                     group_by += '\n%s.%s,' % (dim, attr)
+            if present:
+                from_statement += "\n, %s" % (dim)
+                
+                
     
     if(group_by):
         group_by = group_by[:-1]
