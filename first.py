@@ -1,4 +1,5 @@
 from cProfile import run
+from pprint import pprint
 from tokenize import group
 from certifi import where
 import streamlit as st
@@ -82,7 +83,7 @@ def get_cinjenicne_tablice():
         curr_id = cinjenicne_tablice_id[cinjenicne_tablice.index(tablica)]
         
         naredba = """SELECT   dimTablica.nazTablica
-                    , cinjTabAtribut.imeSQLAtrib
+                    , tabAtribut.imeSQLAtrib
                     , dimTabAtribut.imeSqlAtrib
                     , dimTablica.nazSQLTablica  AS nazSqlDimTablica
                     , cinjTablica.nazSQLTablica AS nazSqlCinjTablica
@@ -110,10 +111,13 @@ def get_cinjenicne_tablice():
         for result in results:
             dim = result[0].strip()
             attr = result[1].strip()
+            print(dim, attr)
             if dim not in tablice[tablica]['dimenzije']:
                 tablice[tablica]['dimenzije'][dim] = {attr: False}
             else:
                 tablice[tablica]['dimenzije'][dim][attr] = False
+                
+    pprint(tablice)
         
     
     
@@ -171,7 +175,7 @@ def run_query():
     results, columns = execute_query(code, connection_string)
     data = pd.DataFrame(results, columns=columns)
     code_block = st.code(code, language='sql')
-    st.subheader('Recimo tablica')
+    st.subheader('Rezultat')
     st.write(data)
   
   
@@ -193,7 +197,7 @@ conn_string_from = st.sidebar.form(key="conn_string_from")
 
 with conn_string_from:
     connection_string = st.text_input("connection string", value=SQL_SERVER_CONNECTION_STRING, max_chars=None, key=None, type="default", help=None, autocomplete=None, args=None, kwargs=None,  placeholder=None, disabled=False)   
-    submitted = st.form_submit_button(label="Osvjezi")
+    submitted = st.form_submit_button(label="Osvježi")
     
 if submitted:
     get_cinjenicne_tablice()
@@ -229,7 +233,7 @@ with form:
 
 
 
-    use_limit = st.checkbox("use limit", value=True)
+    use_limit = st.checkbox("koristi limitator", value=True)
     limit = st.slider('limit', 0, 100, 10)
 
 
